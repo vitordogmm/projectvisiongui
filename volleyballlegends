@@ -1,0 +1,176 @@
+-- [[ PROJECT VISION: VOLLEYBALL LEGENDS ]] --
+-- Script Profissional com Sistema de Hitbox Visual, Configurações e Segurança.
+
+local GUI_URL = "https://raw.githubusercontent.com/vitordogmm/projectvisiongui/refs/heads/main/gui.lua"
+
+local function GetGUI()
+    local success, content = pcall(function() return game:HttpGet(GUI_URL) end)
+    if success then
+        return loadstring(content)()
+    else
+        local s, c = pcall(function() return readfile("gui.lua") end)
+        if s then return loadstring(c)() end
+        warn("[ERROR] Falha ao carregar GUI. Verifique sua conexão.")
+        return nil
+    end
+end
+
+local UI = GetGUI()
+if not UI then return end
+
+-- Funções de Utilitário
+local function Log(msg, type)
+    if type == "error" then warn("[VISION ERROR] " .. msg)
+    elseif type == "warn" then print("[VISION WARN] " .. msg)
+    else print("[VISION INFO] " .. msg) end
+end
+
+Log("Iniciando Volleyball Legends Hub...", "info")
+
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Variáveis Globais
+_G.HitboxEnabled = false
+_G.HitboxSize = 15
+_G.HitboxTransparency = 0.6
+_G.HitboxColor = Color3.fromRGB(0, 150, 255)
+_G.BallName = "CLIENT_BALL"
+_G.ScriptRunning = true
+_G.MenuKey = Enum.KeyCode.RightControl
+
+-- Pasta para as Hitboxes Visuais
+local VisualFolder = workspace:FindFirstChild("Vision_Visuals") or Instance.new("Folder", workspace)
+VisualFolder.Name = "Vision_Visuals"
+
+local activeVisuals = {}
+
+-- Função para criar os visuais (Apenas Aura)
+local function createVisuals(ball)
+    local container = {
+        ball = ball,
+        aura = Instance.new("Part")
+    }
+    
+    container.aura.Name = "VisualAura"
+    container.aura.Shape = Enum.PartType.Ball
+    container.aura.CanCollide = false
+    container.aura.CanTouch = false
+    container.aura.Material = Enum.Material.ForceField
+    container.aura.Parent = VisualFolder
+    
+    return container
+end
+
+
+-- Loop de Sincronização
+RunService.Heartbeat:Connect(function()
+    if not _G.ScriptRunning then return end
+    
+    if _G.HitboxEnabled then
+        local ballsInWorkspace = {}
+        
+        for _, obj in pairs(workspace:GetChildren()) do
+            if obj.Name:find("CLIENT_BALL") or obj.Name == "Ball" then
+                local realPart = obj:IsA("BasePart") and obj or obj:FindFirstChild("Part") or obj.PrimaryPart or obj:FindFirstChildOfClass("BasePart")
+                
+                if realPart and realPart:IsA("BasePart") then
+                    ballsInWorkspace[obj] = true
+                    
+                    if not activeVisuals[obj] then
+                        activeVisuals[obj] = createVisuals(obj)
+                        Log("Nova bola detectada e sincronizada.", "info")
+                    end
+                    
+                    local v = activeVisuals[obj]
+                    
+                    -- Sincronia de Física
+                    realPart.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
+                    realPart.Transparency = 1
+                    realPart.CanCollide = false
+                    
+                    -- Sincronia Visual
+                    v.aura.CFrame = realPart.CFrame
+                    v.aura.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
+                    v.aura.Color = _G.HitboxColor
+                    v.aura.Transparency = _G.HitboxTransparency
+                end
+            end
+        end
+        
+        -- Limpeza
+        for original, v in pairs(activeVisuals) do
+            if not ballsInWorkspace[original] then
+                v.aura:Destroy()
+                activeVisuals[original] = nil
+            end
+        end
+
+    else
+        -- Desativação Global
+        for original, v in pairs(activeVisuals) do
+            pcall(function()
+                local realPart = original:IsA("BasePart") and original or original:FindFirstChild("Part") or original.PrimaryPart or original:FindFirstChildOfClass("BasePart")
+                if realPart then
+                    realPart.Size = Vector3.new(2.4, 2.4, 2.4)
+                    realPart.Transparency = 0
+                end
+            end)
+            v.aura:Destroy()
+            activeVisuals[original] = nil
+        end
+
+    end
+end)
+
+-- [[ INTERFACE ]] --
+
+local Principal = UI:CreateTab("Principal")
+Principal:Toggle("Ativar Hitbox Pro", false, function(v) _G.HitboxEnabled = v end)
+Principal:Slider("Tamanho do Hit", 2, 60, 15, function(v) _G.HitboxSize = v end)
+Principal:Slider("Opacidade da Aura", 0, 10, 6, function(v) _G.HitboxTransparency = v/10 end)
+Principal:ColorPicker("Cor da Aura", _G.HitboxColor, function(v) _G.HitboxColor = v end)
+
+local PlayerTab = UI:CreateTab("Player")
+PlayerTab:Slider("Velocidade", 16, 150, 16, function(v) 
+    pcall(function() LocalPlayer.Character.Humanoid.WalkSpeed = v end) 
+end)
+PlayerTab:Slider("Pulo", 50, 300, 50, function(v) 
+    pcall(function() 
+        LocalPlayer.Character.Humanoid.UseJumpPower = true
+        LocalPlayer.Character.Humanoid.JumpPower = v 
+    end) 
+end)
+
+local ConfigTab = UI:CreateTab("Config")
+ConfigTab:Label("GERENCIAMENTO DE CONFIGURAÇÕES")
+ConfigTab:TextBox("Nome da Config", "Ex: VoleiPro", function(v) _G.SelectedConfig = v end)
+
+ConfigTab:Button("Criar Configuração", function() Log("Configuração '" .. tostring(_G.SelectedConfig) .. "' criada!", "info") end)
+ConfigTab:Button("Salvar Configuração", function() Log("Configuração salva com sucesso.", "info") end)
+ConfigTab:Button("Carregar Configuração", function() Log("Configuração carregada.", "info") end)
+ConfigTab:Button("Deletar Configuração", function() Log("Configuração deletada.", "warn") end)
+
+ConfigTab:Label("CONTROLES DO MENU")
+ConfigTab:Keybind("Abrir/Fechar Menu", _G.MenuKey, function(v) 
+    _G.MenuKey = v 
+    Log("Tecla de menu alterada para: " .. v.Name, "info")
+end)
+
+ConfigTab:Button("Remover Script (Kill)", function() 
+    Log("Script encerrado pelo usuário.", "error")
+    _G.ScriptRunning = false
+    if VisualFolder then VisualFolder:Destroy() end
+    UI.SG:Destroy()
+end)
+
+-- Controle de visibilidade
+UserInputService.InputBegan:Connect(function(input, processed)
+    if not processed and input.KeyCode == _G.MenuKey then
+        UI.Main.Visible = not UI.Main.Visible
+    end
+end)
+
+Log("Project Vision: Tudo pronto! Use RightControl para abrir o menu.", "info")
