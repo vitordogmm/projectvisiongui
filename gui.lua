@@ -133,7 +133,15 @@ function UI:CreateTab(name)
     local Indicator = Create("Frame", { Parent = TabBtn, BackgroundColor3 = Theme.Accent, Position = UDim2.new(0.5, -10, 1, 2), Size = UDim2.new(0, 20, 0, 2), BackgroundTransparency = 1 })
     Create("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Indicator })
     local Page = Create("ScrollingFrame", { Parent = PagesContainer, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Visible = false, ScrollBarThickness = 0, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(0,0,0,0) })
-    Create("UIListLayout", { Padding = UDim.new(0, 10), Parent = Page })
+    local List = Create("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder, Parent = Page })
+
+    local Elements = {}
+    local elementCount = 0
+
+    local function GetOrder()
+        elementCount = elementCount + 1
+        return elementCount
+    end
 
     TabBtn.MouseButton1Click:Connect(function()
         for _, t in pairs(UI.Tabs) do
@@ -149,10 +157,8 @@ function UI:CreateTab(name)
     table.insert(UI.Tabs, { Btn = TabBtn, Page = Page, Ind = Indicator })
     if #UI.Tabs == 1 then Page.Visible = true Indicator.BackgroundTransparency = 0 TabBtn.TextColor3 = Theme.Text end
 
-    local Elements = {}
-
     function Elements:Button(txt, cb)
-        local B = Create("TextButton", { Parent = Page, BackgroundColor3 = Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45), Font = Enum.Font.GothamMedium, Text = "  " .. txt, TextColor3 = Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, AutoButtonColor = false })
+        local B = Create("TextButton", { Parent = Page, LayoutOrder = GetOrder(), BackgroundColor3 = Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45), Font = Enum.Font.GothamMedium, Text = "  " .. txt, TextColor3 = Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, AutoButtonColor = false })
         Create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = B })
         local S = Create("UIStroke", { Thickness = 1.2, Color = Theme.Stroke, Parent = B })
         B.MouseEnter:Connect(function() Tween(B, 0.3, { BackgroundColor3 = Color3.fromRGB(22, 22, 28) }) Tween(S, 0.3, { Color = Theme.Accent }) end)
@@ -161,7 +167,7 @@ function UI:CreateTab(name)
     end
 
     function Elements:Toggle(txt, def, cb)
-        local T = Create("Frame", { Parent = Page, BackgroundColor3 = Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45) })
+        local T = Create("Frame", { Parent = Page, LayoutOrder = GetOrder(), BackgroundColor3 = Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45) })
         Create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = T })
         local Label = Create("TextLabel", { Parent = T, BackgroundTransparency = 1, Position = UDim2.new(0, 15, 0, 0), Size = UDim2.new(1, -100, 1, 0), Font = Enum.Font.Gotham, Text = txt, TextColor3 = Color3.fromRGB(200, 200, 200), TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left })
         local SwitchBG = Create("Frame", { Parent = T, AnchorPoint = Vector2.new(1, 0.5), BackgroundColor3 = def and Theme.Accent or Color3.fromRGB(30, 30, 35), Position = UDim2.new(1, -15, 0.5, 0), Size = UDim2.new(0, 40, 0, 20) })
@@ -173,7 +179,7 @@ function UI:CreateTab(name)
     end
 
     function Elements:Slider(txt, min, max, def, cb)
-        local SldFrame = Create("Frame", { Parent = Page, BackgroundColor3 = Theme.ElementBG, Size = UDim2.new(1, 0, 0, 50) })
+        local SldFrame = Create("Frame", { Parent = Page, LayoutOrder = GetOrder(), BackgroundColor3 = Theme.ElementBG, Size = UDim2.new(1, 0, 0, 50) })
         Create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = SldFrame })
         local Label = Create("TextLabel", { Parent = SldFrame, BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0, 8), Size = UDim2.new(1, -20, 0, 15), Font = Enum.Font.Gotham, Text = txt .. ": " .. tostring(def), TextColor3 = Color3.fromRGB(200, 200, 200), TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left })
         local Bar = Create("Frame", { Parent = SldFrame, BackgroundColor3 = Color3.fromRGB(40, 40, 40), Position = UDim2.new(0, 10, 0, 32), Size = UDim2.new(1, -25, 0, 4) })
@@ -192,7 +198,7 @@ function UI:CreateTab(name)
     end
 
     function Elements:Keybind(txt, def, cb)
-        local KFrame = Create("Frame", { Parent = Page, BackgroundColor3 = Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45) })
+        local KFrame = Create("Frame", { Parent = Page, LayoutOrder = GetOrder(), BackgroundColor3 = Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45) })
         Create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = KFrame })
         local Label = Create("TextLabel", { Parent = KFrame, BackgroundTransparency = 1, Position = UDim2.new(0, 15, 0, 0), Size = UDim2.new(1, -100, 1, 0), Font = Enum.Font.Gotham, Text = txt, TextColor3 = Color3.fromRGB(200, 200, 200), TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left })
         local KeyLabel = Create("TextLabel", { Parent = KFrame, AnchorPoint = Vector2.new(1, 0.5), BackgroundColor3 = Color3.fromRGB(30, 30, 35), Position = UDim2.new(1, -15, 0.5, 0), Size = UDim2.new(0, 85, 0, 25), Font = Enum.Font.GothamBold, Text = def.Name, TextColor3 = Theme.Accent, TextSize = 12 })
@@ -200,12 +206,14 @@ function UI:CreateTab(name)
     end
 
     function Elements:Label(txt)
-        local L = Create("TextLabel", { Parent = Page, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 25), Font = Enum.Font.GothamMedium, Text = txt, TextColor3 = Color3.fromRGB(180, 180, 180), TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left })
-        return L
+        local LFrame = Create("Frame", { Parent = Page, LayoutOrder = GetOrder(), BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 30) })
+        local L = Create("TextLabel", { Parent = LFrame, BackgroundTransparency = 1, Position = UDim2.new(0, 5, 1, -15), Size = UDim2.new(0, 100, 0, 15), Font = Enum.Font.GothamBold, Text = txt:upper(), TextColor3 = Theme.Accent, TextSize = 10, TextXAlignment = Enum.TextXAlignment.Left })
+        local Line = Create("Frame", { Parent = LFrame, BackgroundColor3 = Theme.Accent, BackgroundTransparency = 0.8, Position = UDim2.new(0, 0, 1, 0), Size = UDim2.new(1, 0, 0, 1) })
+        return LFrame
     end
 
     function Elements:TextBox(txt, placeholder, cb)
-        local TFrame = Create("Frame", { Parent = Page, BackgroundColor3 = Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45) })
+        local TFrame = Create("Frame", { Parent = Page, LayoutOrder = GetOrder(), BackgroundColor3 = Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45) })
         Create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = TFrame })
         local Label = Create("TextLabel", { Parent = TFrame, BackgroundTransparency = 1, Position = UDim2.new(0, 15, 0, 0), Size = UDim2.new(0, 100, 1, 0), Font = Enum.Font.Gotham, Text = txt, TextColor3 = Color3.fromRGB(200, 200, 200), TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left })
         local Box = Create("TextBox", { Parent = TFrame, AnchorPoint = Vector2.new(1, 0.5), BackgroundColor3 = Color3.fromRGB(30, 30, 35), Position = UDim2.new(1, -15, 0.5, 0), Size = UDim2.new(0, 150, 0, 28), Font = Enum.Font.Gotham, PlaceholderText = placeholder, Text = "", TextColor3 = Theme.Text, TextSize = 12, ClearTextOnFocus = false })
@@ -214,7 +222,7 @@ function UI:CreateTab(name)
     end
 
     function Elements:ColorPicker(txt, def, cb)
-        local CPFrame = Create("Frame", { Parent = Page, BackgroundColor3 = Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45) })
+        local CPFrame = Create("Frame", { Parent = Page, LayoutOrder = GetOrder(), BackgroundColor3 = Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45) })
         Create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = CPFrame })
         local Label = Create("TextLabel", { Parent = CPFrame, BackgroundTransparency = 1, Position = UDim2.new(0, 15, 0, 0), Size = UDim2.new(1, -100, 1, 0), Font = Enum.Font.Gotham, Text = txt, TextColor3 = Color3.fromRGB(200, 200, 200), TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left })
         
@@ -222,16 +230,39 @@ function UI:CreateTab(name)
         Create("UICorner", { CornerRadius = UDim.new(0, 4), Parent = ColorPreview })
         Create("UIStroke", { Thickness = 1.2, Color = Theme.Stroke, Parent = ColorPreview })
 
-        local colors = {Color3.fromRGB(0, 150, 255), Color3.fromRGB(255, 80, 80), Color3.fromRGB(80, 255, 80), Color3.fromRGB(255, 200, 0), Color3.fromRGB(255, 255, 255), Color3.fromRGB(0,0,0)}
-        local currIdx = 1
+        local PickerActive = false
+        local PickerFrame = Create("Frame", { Parent = Page, LayoutOrder = GetOrder(), BackgroundColor3 = Theme.ElementBG, Size = UDim2.new(1, 0, 0, 0), ClipsDescendants = true, Visible = false })
+        Create("UICorner", { CornerRadius = UDim.new(0, 8), Parent = PickerFrame })
+        
+        local HueBar = Create("Frame", { Parent = PickerFrame, Position = UDim2.new(0, 10, 0, 10), Size = UDim2.new(1, -20, 0, 20) })
+        local HueGradient = Create("UIGradient", { Parent = HueBar, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromHSV(0, 1, 1)), ColorSequenceKeypoint.new(0.2, Color3.fromHSV(0.2, 1, 1)), ColorSequenceKeypoint.new(0.4, Color3.fromHSV(0.4, 1, 1)), ColorSequenceKeypoint.new(0.6, Color3.fromHSV(0.6, 1, 1)), ColorSequenceKeypoint.new(0.8, Color3.fromHSV(0.8, 1, 1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1)) }) })
+        
+        local h, s, v = def:ToHSV()
+        local function UpdateColor()
+            local newColor = Color3.fromHSV(h, 1, 1)
+            ColorPreview.BackgroundColor3 = newColor
+            cb(newColor)
+        end
+
+        HueBar.InputBegan:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                local function Move()
+                    local percent = math.clamp((UserInputService:GetMouseLocation().X - HueBar.AbsolutePosition.X) / HueBar.AbsoluteSize.X, 0, 1)
+                    h = percent
+                    UpdateColor()
+                end
+                local conn
+                conn = UserInputService.InputChanged:Connect(function(i2) if i2.UserInputType == Enum.UserInputType.MouseMovement then Move() end end)
+                UserInputService.InputEnded:Connect(function(i3) if i3.UserInputType == Enum.UserInputType.MouseButton1 then conn:Disconnect() end end)
+                Move()
+            end
+        end)
 
         CPFrame.InputBegan:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1 then
-                currIdx = currIdx + 1
-                if currIdx > #colors then currIdx = 1 end
-                local newCol = colors[currIdx]
-                ColorPreview.BackgroundColor3 = newCol
-                cb(newCol)
+                PickerActive = not PickerActive
+                PickerFrame.Visible = true
+                Tween(PickerFrame, 0.4, { Size = PickerActive and UDim2.new(1, 0, 0, 40) or UDim2.new(1, 0, 0, 0) })
             end
         end)
     end
